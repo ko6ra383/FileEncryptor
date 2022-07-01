@@ -10,7 +10,7 @@ namespace FIleRncryptor.WPF.Infrastructure.Commands.Base
             add => CommandManager.RequerySuggested += value;
             remove => CommandManager.RequerySuggested -= value;
         }
-        private bool _Executable;
+        private bool _Executable = true;
 
         public bool Executable
         {

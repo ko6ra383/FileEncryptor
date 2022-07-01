@@ -4,6 +4,7 @@ using System;
 using System.Windows;
 using FIleRncryptor.WPF.Services;
 using FIleRncryptor.WPF.ViewModels;
+using System.Linq;
 
 namespace FIleRncryptor.WPF
 {
@@ -12,6 +13,8 @@ namespace FIleRncryptor.WPF
         private static IHost __Host;
         public static IHost Host => __Host ??= Program.CreateHostBuilder(Environment.GetCommandLineArgs()).Build();
         public static IServiceProvider Services => Host.Services;
+        public static Window FocucedWindow => Current.Windows.Cast<Window>().FirstOrDefault(w => w.IsFocused);
+        public static Window ActiveWindow => Current.Windows.Cast<Window>().FirstOrDefault(w => w.IsActive);
         internal static void Configureservices(HostBuilderContext host, IServiceCollection services)
         {
             services.AddServices();
