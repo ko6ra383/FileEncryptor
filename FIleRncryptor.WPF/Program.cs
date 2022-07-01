@@ -18,6 +18,6 @@ namespace FIleRncryptor.WPF
         }
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-            .ConfigureServices(App.Configureservices)
+            .ConfigureServices(App.Configureservices);
     }
 }
