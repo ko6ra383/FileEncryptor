@@ -2,6 +2,8 @@
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Windows;
+using FIleRncryptor.WPF.Services;
+using FIleRncryptor.WPF.ViewModels;
 
 namespace FIleRncryptor.WPF
 {
@@ -9,9 +11,11 @@ namespace FIleRncryptor.WPF
     {
         private static IHost __Host;
         public static IHost Host => __Host ??= Program.CreateHostBuilder(Environment.GetCommandLineArgs()).Build();
-        internal static void Configureservices(HostBuilderContext arg1, IServiceCollection arg2)
+        public static IServiceProvider Services => Host.Services;
+        internal static void Configureservices(HostBuilderContext host, IServiceCollection services)
         {
-            
+            services.AddServices();
+            services.AddViewModels();
         }
         protected override async void OnStartup(StartupEventArgs e)
         {
