@@ -8,6 +8,11 @@ namespace FIleRncryptor.WPF.Infrastructure.Commands
         private Action<object> _Execute;
         private Func<object, bool> _CanExecute;
 
+        public LambdaCommand(Action Execute, Func<bool> CanExecute = null)
+            :this(p => Execute(), CanExecute is null ? (Func<object, bool>)null : p => CanExecute())
+        {
+
+        }
         public LambdaCommand(Action<object> Execute, Func<object, bool> CanExecute = null)
         {
             _Execute = Execute;

@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:FIleRncryptor.WPF"
         mc:Ignorable="d"
         DataContext="{Binding MainViewModel,Source={StaticResource Locator}}"
-        Title="{Binding Title}" Height="450" Width="800">
+        Title="{Binding Title}" Height="244" Width="577">
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="Файл">
@@ -45,14 +45,32 @@
                 <RowDefinition Height="auto"/>
                 <RowDefinition />
             </Grid.RowDefinitions>
+
             <TextBlock Grid.Column="0" Grid.Row="0" Text="Пароль:" />
             <TextBox Grid.Column="1" Grid.Row="0" Text="123"/>
 
             <TextBlock Grid.Column="0" Grid.Row="1" Text="Файл:" />
             <DockPanel Grid.Column="1" Grid.Row="1">
-                <Button Content="Выбор" DockPanel.Dock="Right" Padding="10 0"/>
-                <TextBox IsReadOnly="True" BorderThickness="0"/>
+                <Button Content="Выбор" DockPanel.Dock="Right" Padding="10 0" Command="{Binding SelectFileCommand}"/>
+                <TextBox IsReadOnly="True" BorderThickness="0"
+                         Text="{Binding SelectedFile.Name, Mode=OneWay}"
+                         ToolTip="{Binding SelectedFile.FullName}"/>
             </DockPanel>
+
+            <TextBlock Grid.Column="0" Grid.Row="2" Text="Размер:" />
+            <TextBox Grid.Column="1" Grid.Row="2" IsReadOnly="True" BorderThickness="0"
+                     Text="{Binding SelectedFile.Length, Mode=OneWay}"/>
+
+            <UniformGrid Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Rows="1"
+                         VerticalAlignment="Top" HorizontalAlignment="Center"
+                         Margin="0 10">
+                <Button Content="Зашифровать" Margin="5" Padding="10 8"
+                        Command="{Binding EncryptCommand}"
+                        CommandParameter=""/>
+                <Button Content="Расшифровать" Margin="5" Padding="10 8"
+                        Command="{Binding DecryptCommand}"/>
+            </UniformGrid>
+
         </Grid>
     </DockPanel>
 </Window>
