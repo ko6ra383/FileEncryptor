@@ -45,6 +45,7 @@ namespace FIleRncryptor.WPF.Services
             int readed;
             do
             {
+                Thread.Sleep(2);
                 readed = source.Read(buffer,0, BufferLength);
                 destination.Write(buffer, 0, readed);
             } while (readed > 0);
@@ -63,6 +64,7 @@ namespace FIleRncryptor.WPF.Services
             int readed;
             do
             {
+                
                 readed = encrypted_source.Read(buffer, 0, BufferLength);
                 destination.Write(buffer, 0, readed);
             } while (readed > 0);
