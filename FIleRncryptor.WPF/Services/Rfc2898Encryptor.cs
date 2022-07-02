@@ -80,6 +80,53 @@ namespace FIleRncryptor.WPF.Services
             
             return true;
         }
+        public async Task EncryptAsync(string SourcePath, string DestinationPath, string Password, int BufferLength = 104200)
+        {
+            var encryptor = GetEncryptor(Password);
 
+            await using var destination_encrypted = File.Create(DestinationPath, BufferLength);
+            await using var destination = new CryptoStream(destination_encrypted, encryptor, CryptoStreamMode.Write);
+            await using var source = File.OpenRead(SourcePath);
+
+            var buffer = new byte[BufferLength];
+            int readed;
+            do
+            {
+                readed = await source.ReadAsync(buffer, 0, BufferLength).ConfigureAwait(false);
+                await destination.WriteAsync(buffer, 0, readed).ConfigureAwait(false);
+                Thread.Sleep(20);
+
+            } while (readed > 0);
+            destination.FlushFinalBlock();
+
+        }
+        public async Task<bool> DecryptAsync(string SourcePath, string DestinationPath, string Password, int BufferLength = 104200)
+        {
+            var decryptor = GetDecryptor(Password);
+
+            await using var destination_decrypted = File.Create(DestinationPath, BufferLength);
+            await using var destination = new CryptoStream(destination_decrypted, decryptor, CryptoStreamMode.Write);
+            await using var encrypted_source = File.OpenRead(SourcePath);
+
+            var buffer = new byte[BufferLength];
+            int readed;
+            do
+            {
+                readed = await encrypted_source.ReadAsync(buffer, 0, BufferLength).ConfigureAwait(false);
+                await destination.WriteAsync(buffer, 0, readed).ConfigureAwait(false);
+
+            } while (readed > 0);
+
+            try
+            {
+                destination.FlushFinalBlock();
+            }
+            catch (CryptographicException)
+            {
+                return false;
+            }
+
+            return true;
+        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using FIleRncryptor.WPF.Infrastructure.Commands;
+using FIleRncryptor.WPF.Infrastructure.Commands.Base;
 using FIleRncryptor.WPF.Services.Interfaces;
 using FIleRncryptor.WPF.ViewModels.Base;
 using System;
@@ -49,7 +50,7 @@ namespace FIleRncryptor.WPF.ViewModels
         private bool CanEncryptCommandExecute(object p) => 
             (p is FileInfo file && file.Exists || SelectedFile != null) && !string.IsNullOrWhiteSpace(Password);
 
-        private void OnEncryptCommandExecute(object p)
+        private async void OnEncryptCommandExecute(object p)
         {
             var file = p as FileInfo ?? SelectedFile;
             if (file is null) return;
@@ -58,7 +59,9 @@ namespace FIleRncryptor.WPF.ViewModels
             if (!_UserDialog.SaveFile("Выбор файла для сохранения", out var destinationPath, defaultFile)) return;
 
             var timer = Stopwatch.StartNew();
-            _Encryptor.Encrypt(file.FullName, destinationPath, Password);
+            ((Command)EncryptCommand).Executable = false;
+            await _Encryptor.EncryptAsync(file.FullName, destinationPath, Password);
+            ((Command)EncryptCommand).Executable = true;
             timer.Stop();
             _UserDialog.Information("Шифрование", $"Шифрование файла успешно выполнено {timer.Elapsed.TotalSeconds}");
         }
@@ -73,7 +76,7 @@ namespace FIleRncryptor.WPF.ViewModels
         private bool CanDecryptCommandExecute(object p) =>
              (p is FileInfo file && file.Exists || SelectedFile != null) && !string.IsNullOrWhiteSpace(Password);
 
-        private void OnDecryptCommandExecute(object p)
+        private async void OnDecryptCommandExecute(object p)
         {
             var file = p as FileInfo ?? SelectedFile;
             if (file is null) return;
@@ -84,7 +87,9 @@ namespace FIleRncryptor.WPF.ViewModels
             if (!_UserDialog.SaveFile("Выбор файла для сохранения", out var destinationPath, defaultFile)) return;
 
             var timer = Stopwatch.StartNew();
-            var success = _Encryptor.Decrypt(file.FullName, destinationPath, Password);
+            ((Command)EncryptCommand).Executable = false;
+            var success = await _Encryptor.DecryptAsync(file.FullName, destinationPath, Password);
+            ((Command)EncryptCommand).Executable = true;
             timer.Stop();
             if (success)
                 _UserDialog.Information("Дешифрование", $"Дешифровка файла успешно выполнена {timer.Elapsed.TotalSeconds}");
