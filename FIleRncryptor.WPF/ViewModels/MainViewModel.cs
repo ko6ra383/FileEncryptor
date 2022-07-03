@@ -60,12 +60,14 @@ namespace FIleRncryptor.WPF.ViewModels
 
             var timer = Stopwatch.StartNew();
             ((Command)EncryptCommand).Executable = false;
+            ((Command)DecryptCommand).Executable = false;
             await _Encryptor.EncryptAsync(file.FullName, destinationPath, Password);
             ((Command)EncryptCommand).Executable = true;
+            ((Command)DecryptCommand).Executable = true;
             timer.Stop();
             _UserDialog.Information("Шифрование", $"Шифрование файла успешно выполнено {timer.Elapsed.TotalSeconds}");
         }
-
+        
         #endregion
         #region DecryptCommand
         private ICommand _DecryptCommand;
@@ -88,8 +90,10 @@ namespace FIleRncryptor.WPF.ViewModels
 
             var timer = Stopwatch.StartNew();
             ((Command)EncryptCommand).Executable = false;
+            ((Command)DecryptCommand).Executable = false;
             var success = await _Encryptor.DecryptAsync(file.FullName, destinationPath, Password);
             ((Command)EncryptCommand).Executable = true;
+            ((Command)DecryptCommand).Executable = true;
             timer.Stop();
             if (success)
                 _UserDialog.Information("Дешифрование", $"Дешифровка файла успешно выполнена {timer.Elapsed.TotalSeconds}");
