@@ -45,7 +45,7 @@ namespace FIleRncryptor.WPF.Services
             int readed;
             do
             {
-                Thread.Sleep(2);
+                //Thread.Sleep(2);
                 readed = source.Read(buffer,0, BufferLength);
                 destination.Write(buffer, 0, readed);
             } while (readed > 0);
@@ -101,6 +101,7 @@ namespace FIleRncryptor.WPF.Services
                 await using var source = File.OpenRead(SourcePath);
 
                 var file_length = source.Length;
+                var last_percent = 0.0;
 
                 var buffer = new byte[BufferLength];
                 int readed;
@@ -110,7 +111,12 @@ namespace FIleRncryptor.WPF.Services
                     await destination.WriteAsync(buffer, 0, readed, Cansel).ConfigureAwait(false);
 
                     var position = source.Position;
-                    Progress?.Report((double)position / file_length);
+                    var percent = (double)position / file_length;
+                    if (percent - last_percent >= 0.001)
+                    {
+                        Progress?.Report(percent);
+                        last_percent = percent;
+                    }
                     
                     Thread.Sleep(20);
                     if (Cansel.IsCancellationRequested)
@@ -126,6 +132,7 @@ namespace FIleRncryptor.WPF.Services
             catch (OperationCanceledException)
             {
                 File.Delete(DestinationPath);
+                Progress?.Report(0);
                 throw;
             }
             catch (Exception error)
@@ -155,6 +162,7 @@ namespace FIleRncryptor.WPF.Services
                 await using var encrypted_source = File.OpenRead(SourcePath);
 
                 var file_length = encrypted_source.Length;
+                var last_percent = 0.0;
 
                 var buffer = new byte[BufferLength];
                 int readed;
@@ -164,7 +172,12 @@ namespace FIleRncryptor.WPF.Services
                     await destination.WriteAsync(buffer, 0, readed, Cansel).ConfigureAwait(false);
 
                     var position = encrypted_source.Position;
-                    Progress?.Report((double)position / file_length);
+                    var percent = (double)position / file_length;
+                    if(percent - last_percent >= 0.1)
+                    {
+                        Progress?.Report(percent);
+                        last_percent = percent;
+                    }
 
                     if (Cansel.IsCancellationRequested)
                     {
@@ -186,6 +199,7 @@ namespace FIleRncryptor.WPF.Services
             catch (OperationCanceledException)
             {
                 File.Delete(DestinationPath);
+                Progress?.Report(0);
                 throw;
             }
             catch (Exception)

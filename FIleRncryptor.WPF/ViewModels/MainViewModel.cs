@@ -5,6 +5,7 @@ using FIleRncryptor.WPF.ViewModels.Base;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using System.Windows.Input;
 
 namespace FIleRncryptor.WPF.ViewModels
@@ -12,8 +13,11 @@ namespace FIleRncryptor.WPF.ViewModels
     internal class MainViewModel : BaseViewModel
     {
         private const string __EncryptedFileSuffix = ".encrypted";
+
         private readonly IUserDialogService _UserDialog;
         private readonly IEncryptor _Encryptor;
+
+        private CancellationTokenSource _ProcessCansellation;
         #region Properties
         #region Title
         private string _Title = "Encryptor";
@@ -27,6 +31,10 @@ namespace FIleRncryptor.WPF.ViewModels
         private FileInfo _SelectedFile;
         public FileInfo SelectedFile { get => _SelectedFile; set => Set(ref _SelectedFile, value); }
         #endregion
+        #region ProgressValue
+        private double _ProgressValue;
+        public double ProgressValue { get => _ProgressValue; set => Set(ref _ProgressValue, value); }
+        #endregion  
         #endregion
 
         #region Commands
@@ -59,13 +67,30 @@ namespace FIleRncryptor.WPF.ViewModels
             if (!_UserDialog.SaveFile("Выбор файла для сохранения", out var destinationPath, defaultFile)) return;
 
             var timer = Stopwatch.StartNew();
+
+            var progress = new Progress<double>(percent => ProgressValue = percent);
+
+            _ProcessCansellation = new CancellationTokenSource();
+
             ((Command)EncryptCommand).Executable = false;
             ((Command)DecryptCommand).Executable = false;
-            await _Encryptor.EncryptAsync(file.FullName, destinationPath, Password);
+            try
+            {
+                await _Encryptor.EncryptAsync(file.FullName, destinationPath, Password, Progress:progress, Cansel: _ProcessCansellation.Token);
+            }
+            catch (OperationCanceledException)
+            {
+
+            }
+            finally
+            {
+                _ProcessCansellation.Dispose();
+                _ProcessCansellation = null;
+            }
             ((Command)EncryptCommand).Executable = true;
             ((Command)DecryptCommand).Executable = true;
             timer.Stop();
-            _UserDialog.Information("Шифрование", $"Шифрование файла успешно выполнено {timer.Elapsed.TotalSeconds}");
+            //_UserDialog.Information("Шифрование", $"Шифрование файла успешно выполнено {timer.Elapsed.TotalSeconds}");
         }
         
         #endregion
@@ -89,19 +114,44 @@ namespace FIleRncryptor.WPF.ViewModels
             if (!_UserDialog.SaveFile("Выбор файла для сохранения", out var destinationPath, defaultFile)) return;
 
             var timer = Stopwatch.StartNew();
+            var progress = new Progress<double>(percent => ProgressValue = percent);
+
+            _ProcessCansellation = new CancellationTokenSource();
+
             ((Command)EncryptCommand).Executable = false;
             ((Command)DecryptCommand).Executable = false;
-            var success = await _Encryptor.DecryptAsync(file.FullName, destinationPath, Password);
+
+            var success = false;
+            var descryption_task = _Encryptor.DecryptAsync(file.FullName, destinationPath, Password, Progress:progress, Cansel: _ProcessCansellation.Token);
+            try
+            {
+                success = await descryption_task;
+            }
+            catch (OperationCanceledException)
+            {
+
+            }
+            finally
+            {
+                _ProcessCansellation.Dispose();
+                _ProcessCansellation = null;
+            }
             ((Command)EncryptCommand).Executable = true;
             ((Command)DecryptCommand).Executable = true;
             timer.Stop();
-            if (success)
-                _UserDialog.Information("Дешифрование", $"Дешифровка файла успешно выполнена {timer.Elapsed.TotalSeconds}");
-            else
-                _UserDialog.Error("Дешифрование", "Ошибка при дешифровке файла");
+            //if (success)
+            //    _UserDialog.Information("Дешифрование", $"Дешифровка файла успешно выполнена {timer.Elapsed.TotalSeconds}");
+            //else
+            //    _UserDialog.Error("Дешифрование", "Ошибка при дешифровке файла");
         }
 
         #endregion
+         
+        private ICommand _CanselCommand;
+        public ICommand CanselCommand => 
+            _CanselCommand ??= new LambdaCommand(OnCanselCommandExecute, CanCanselCommandExecute);
+        private bool CanCanselCommandExecute() => _ProcessCansellation != null && !_ProcessCansellation.IsCancellationRequested;
+        private void OnCanselCommandExecute() => _ProcessCansellation.Cancel();
         #endregion
         public MainViewModel(IUserDialogService UserDialog, IEncryptor Encryptor)
         {
